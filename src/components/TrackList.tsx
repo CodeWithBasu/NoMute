@@ -1,10 +1,36 @@
 "use client";
 
-import { Sliders } from "lucide-react";
-import { audioEngine } from "@/lib/audio-engine";
+import React, { ChangeEvent } from "react";
+import { Sliders, LucideIcon } from "lucide-react";
+import { audioEngine, TrackType } from "@/lib/audio-engine";
 
-export default function TrackList({ playlist, currentTrackIndex, onSelectTrack, isBassBoost, setIsBassBoost, onTriggerToast }) {
-  const handleBassToggle = (e) => {
+export interface Track {
+  title: string;
+  artist: string;
+  type: TrackType;
+  icon: LucideIcon;
+  duration: string;
+  durationSec: number;
+}
+
+export interface TrackListProps {
+  playlist: Track[];
+  currentTrackIndex: number;
+  onSelectTrack: (index: number) => void;
+  isBassBoost: boolean;
+  setIsBassBoost: (enabled: boolean) => void;
+  onTriggerToast: (message: string) => void;
+}
+
+export default function TrackList({
+  playlist,
+  currentTrackIndex,
+  onSelectTrack,
+  isBassBoost,
+  setIsBassBoost,
+  onTriggerToast
+}: TrackListProps) {
+  const handleBassToggle = (e: ChangeEvent<HTMLInputElement>) => {
     const enabled = e.target.checked;
     setIsBassBoost(enabled);
     audioEngine.setBassBoost(enabled);
