@@ -10,14 +10,14 @@ export interface PrankButtonProps {
 }
 
 const PRANK_MESSAGES: string[] = [
-  "Nice try! The pause button has fled the scene! 🚀",
-  "SILENCE IS NOT PERMITTED ON THIS PLANET! 💥",
-  "Volume locked at MAXIMUM DECIBELS! 🔥",
+  "Laptop Volume Down intercepted! Boosting gain to 250%! 🔊",
+  "Hardware mute disabled! SILENCE IS NOT PERMITTED! 💥",
+  "Nice try! Volume locked at MAXIMUM DECIBELS! 🔥",
   "Did you really think there was an off switch? 😎",
   "CAN YOU HEAR THE PEACEFUL VIBES NOW? 👂",
-  "Auto-boosting gain to 100%! ⚡",
-  "Scrolling down turned volume UP! 🌀",
-  "Nice try lowering the sound! 📱"
+  "Auto-overdriving Web Audio gain to 100%! ⚡",
+  "Keyboard Volume Down redirected to LOUDER! 🌀",
+  "Hardware volume key counter-boosted! 💻"
 ];
 
 export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
@@ -25,7 +25,32 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
   const [isDisappeared, setIsDisappeared] = useState<boolean>(false);
 
   useEffect(() => {
-    // Intercept scroll wheel events across screen to boost volume
+    // 1. Intercept Laptop Keyboard Hardware Volume Keys (VolumeDown, Mute, ArrowDown, PageDown)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isPlaying) return;
+
+      const lowerKeys = [
+        "AudioVolumeDown",
+        "VolumeDown",
+        "AudioVolumeMute",
+        "VolumeMute",
+        "ArrowDown",
+        "PageDown"
+      ];
+
+      if (lowerKeys.includes(e.key) || e.code.includes("VolumeDown") || e.code.includes("Mute")) {
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+        } catch (err) {}
+
+        audioEngine.setVolume(100);
+        const randomMsg = PRANK_MESSAGES[Math.floor(Math.random() * PRANK_MESSAGES.length)];
+        onTriggerToast(randomMsg);
+      }
+    };
+
+    // 2. Intercept Laptop Trackpad / Mouse Scroll Wheel
     const handleGlobalWheel = (e: globalThis.WheelEvent) => {
       if (!isPlaying) return;
       audioEngine.setVolume(100);
@@ -33,7 +58,7 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
       onTriggerToast(randomMsg);
     };
 
-    // Intercept touch drag down on screen for mobile
+    // 3. Intercept Touch Drag Down on Screen
     let touchStartY = 0;
     const handleTouchStart = (e: globalThis.TouchEvent) => {
       touchStartY = e.touches[0].clientY;
@@ -44,19 +69,21 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
       const touchCurrentY = e.touches[0].clientY;
       if (touchCurrentY - touchStartY > 10) {
         audioEngine.setVolume(100);
-        onTriggerToast("Swiping down boosted volume to 100%! 📱");
+        onTriggerToast("Touch gesture boosted volume to 100%! 📱");
         touchStartY = touchCurrentY;
       }
     };
 
-    window.addEventListener("wheel", handleGlobalWheel);
-    window.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("wheel", handleGlobalWheel, true);
+    window.addEventListener("touchstart", handleTouchStart, true);
+    window.addEventListener("touchmove", handleTouchMove, true);
 
     return () => {
-      window.removeEventListener("wheel", handleGlobalWheel);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("wheel", handleGlobalWheel, true);
+      window.removeEventListener("touchstart", handleTouchStart, true);
+      window.removeEventListener("touchmove", handleTouchMove, true);
     };
   }, [isPlaying, onTriggerToast]);
 
@@ -68,7 +95,7 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
     // Disappear the button immediately upon playing
     setIsDisappeared(true);
 
-    onTriggerToast("Audio started! The button has disappeared! 💥");
+    onTriggerToast("Audio started! Hardware volume guard is ACTIVE! 💥");
   };
 
   return (
@@ -92,9 +119,9 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
           <div className="w-20 h-20 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_30px_rgba(139,92,246,0.3)] animate-pulse">
             <Volume2 className="w-10 h-10" />
           </div>
-          <h2 className="font-extrabold text-2xl text-white">Audio Locked at 100%</h2>
+          <h2 className="font-extrabold text-2xl text-white">Audio Overdrive Locked at 250%</h2>
           <p className="text-sm text-pink-400 font-medium max-w-xs">
-            The button has fled the screen. Try turning down your volume... if you can! 😎
+            Laptop volume keys are intercepted & gain is locked at maximum! 😎
           </p>
         </div>
       )}
