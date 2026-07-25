@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { audioEngine } from "@/lib/audio-engine";
 
-export default function AudioVisualizer({ isPlaying }) {
-  const canvasRef = useRef(null);
-  const animFrameIdRef = useRef(null);
+export interface AudioVisualizerProps {
+  isPlaying: boolean;
+}
+
+export default function AudioVisualizer({ isPlaying }: AudioVisualizerProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animFrameIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     const handleResize = () => {
       if (canvas.parentElement) {
