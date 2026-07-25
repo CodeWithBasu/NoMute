@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, WheelEvent } from "react";
-import { Play, Volume2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Volume2 } from "lucide-react";
 import { audioEngine } from "@/lib/audio-engine";
+import { LiquidMetalButton } from "@/components/ui/liquid-metal-button";
 
 export interface PrankButtonProps {
   onTriggerToast: (message: string) => void;
@@ -67,27 +68,23 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
     // Disappear the button immediately upon playing
     setIsDisappeared(true);
 
-    onTriggerToast("Audio started! The stop button has disappeared! 💥");
+    onTriggerToast("Audio started! The button has disappeared! 💥");
   };
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 text-center z-20">
       {!isDisappeared ? (
-        <div className="relative flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
+        <div className="relative flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-500">
           {/* Ambient Glow Aura */}
-          <div className="absolute w-44 h-44 rounded-full bg-purple-500/30 blur-2xl animate-pulse pointer-events-none" />
+          <div className="absolute w-56 h-56 rounded-full bg-purple-500/20 blur-3xl animate-pulse pointer-events-none" />
 
-          {/* Premium Glowing Play Button */}
-          <button
-            onClick={handlePlayClick}
-            title="Press to Play Audio"
-            className="relative w-36 h-36 rounded-full bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-500 text-white flex items-center justify-center shadow-[0_15px_60px_rgba(139,92,246,0.7)] hover:scale-110 active:scale-95 transition-all duration-300 border-2 border-white/30 group cursor-pointer"
-          >
-            <Play className="w-16 h-16 ml-2 transition-transform duration-300 group-hover:scale-110 drop-shadow-md" />
-          </button>
+          {/* Premium Shader Liquid Metal Button with "Click Me" label */}
+          <div className="transform hover:scale-105 transition-all duration-300">
+            <LiquidMetalButton label="Click Me" onClick={handlePlayClick} />
+          </div>
 
-          <span className="text-sm font-semibold tracking-wider uppercase text-gray-400 animate-pulse">
-            Press to Start Audio
+          <span className="text-xs font-semibold tracking-widest uppercase text-gray-400 animate-pulse">
+            Press to start audio experience
           </span>
         </div>
       ) : (
@@ -97,7 +94,7 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
           </div>
           <h2 className="font-extrabold text-2xl text-white">Audio Locked at 100%</h2>
           <p className="text-sm text-pink-400 font-medium max-w-xs">
-            The stop button has fled the screen. Try adjusting your volume... if you dare! 😎
+            The button has fled the screen. Try turning down your volume... if you can! 😎
           </p>
         </div>
       )}
