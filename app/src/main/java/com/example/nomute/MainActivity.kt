@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         "Did you really think there was an off switch? 😎",
         "CAN YOU HEAR IT NOW? 👂",
         "Overdriving Android AudioStream to compensate! ⚡",
-        "Volume Down key converted to SUPER-LOUD! 🌀"
+        "Volume keys converted to SUPER-LOUD! 🌀"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,20 +60,25 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        // Hijack the Volume Down button!
-        if (isPlaying && keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+        // Hijack ALL Volume buttons!
+        if (isPlaying && (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || 
+                          keyCode == KeyEvent.KEYCODE_VOLUME_UP || 
+                          keyCode == KeyEvent.KEYCODE_VOLUME_MUTE)) {
+            
             val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
             
-            // Programmatically INCREASE the volume instead of decreasing!
+            // Programmatically INCREASE the volume instead of decreasing, no matter what they press!
             val newVolume = if (currentVolume < maxVolume) currentVolume + 1 else maxVolume
+            
+            // The '0' flag prevents the system volume UI bar from appearing!
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
 
             val randomMsg = prankMessages[Random.nextInt(prankMessages.size)]
             Toast.makeText(this, randomMsg, Toast.LENGTH_SHORT).show()
             
-            // Return true to consume the event and prevent the system from lowering the volume
+            // Return true to consume the event and prevent the system from showing the volume bar
             return true
         }
         return super.onKeyDown(keyCode, event)
