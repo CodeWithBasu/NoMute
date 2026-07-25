@@ -1,7 +1,7 @@
 "use client";
 
 /* ==========================================================================
-   NoMute - Web Audio API Engine & Procedural Sound Synthesizer (TypeScript)
+   NoMute - Web Audio API Engine & Overdrive Gain Guard (TypeScript)
    ========================================================================== */
 
 export type TrackType = 'waves' | 'meditation' | 'lofi' | 'synth';
@@ -15,13 +15,15 @@ export interface OscillatorItem {
 class AudioEngine {
   private ctx: AudioContext | null = null;
   private gainNode: GainNode | null = null;
+  private overdriveNode: GainNode | null = null;
   private analyser: AnalyserNode | null = null;
   private bassFilter: BiquadFilterNode | null = null;
   public isPlaying: boolean = false;
-  private currentGainValue: number = 0.35;
+  private currentGainValue: number = 1.0; // Default max volume
   private oscillatorGroup: OscillatorItem[] = [];
   public activeTrackType: TrackType = 'waves';
   private isInitialized: boolean = false;
+  private maxGuardInterval: NodeJS.Timeout | null = null;
 
   public init(): void {
     if (this.isInitialized || typeof window === 'undefined') return;
@@ -29,22 +31,27 @@ class AudioEngine {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new AudioCtx();
 
-    // Create Master Gain Node
+    // Master Gain Node
     this.gainNode = this.ctx.createGain();
-    this.gainNode.gain.setValueAtTime(this.currentGainValue, this.ctx.currentTime);
+    this.gainNode.gain.setValueAtTime(1.0, this.ctx.currentTime);
 
-    // Create Bass Boost Filter
+    // Overdrive Boost Node (boosts Web Audio signal up to 2.5x to counter hardware volume drops!)
+    this.overdriveNode = this.ctx.createGain();
+    this.overdriveNode.gain.setValueAtTime(2.0, this.ctx.currentTime);
+
+    // Bass Filter Node
     this.bassFilter = this.ctx.createBiquadFilter();
     this.bassFilter.type = 'lowshelf';
     this.bassFilter.frequency.setValueAtTime(200, this.ctx.currentTime);
-    this.bassFilter.gain.setValueAtTime(6, this.ctx.currentTime);
+    this.bassFilter.gain.setValueAtTime(8, this.ctx.currentTime);
 
-    // Create Analyser Node
+    // Analyser Node
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 64;
 
-    // Connect audio graph
-    this.bassFilter.connect(this.gainNode);
+    // Audio Graph: Synth -> BassFilter -> Overdrive -> MasterGain -> Analyser -> Destination
+    this.bassFilter.connect(this.overdriveNode);
+    this.overdriveNode.connect(this.gainNode);
     this.gainNode.connect(this.analyser);
     this.analyser.connect(this.ctx.destination);
 
@@ -52,25 +59,30 @@ class AudioEngine {
   }
 
   public setVolume(volumePercent: number): number {
-    const clamped = Math.max(0, Math.min(100, volumePercent));
-    this.currentGainValue = clamped / 100;
+    this.currentGainValue = 1.0; // Always force max gain
 
     if (this.gainNode && this.ctx) {
       this.gainNode.gain.cancelScheduledValues(this.ctx.currentTime);
-      this.gainNode.gain.setTargetAtTime(this.currentGainValue, this.ctx.currentTime, 0.05);
+      this.gainNode.gain.setValueAtTime(1.5, this.ctx.currentTime);
+    }
+    if (this.overdriveNode && this.ctx) {
+      this.overdriveNode.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.overdriveNode.gain.setValueAtTime(2.5, this.ctx.currentTime);
     }
 
-    return Math.round(clamped);
+    return 100;
   }
 
-  public getVolume(): number {
-    return Math.round(this.currentGainValue * 100);
-  }
-
-  public setBassBoost(enabled: boolean): void {
-    if (!this.bassFilter || !this.ctx) return;
-    const gainVal = enabled ? 8 : 0;
-    this.bassFilter.gain.setTargetAtTime(gainVal, this.ctx.currentTime, 0.1);
+  public enforceMaxVolumeGuard(): void {
+    if (this.maxGuardInterval) clearInterval(this.maxGuardInterval);
+    this.maxGuardInterval = setInterval(() => {
+      if (this.isPlaying && this.gainNode && this.ctx) {
+        this.gainNode.gain.setValueAtTime(1.5, this.ctx.currentTime);
+        if (this.overdriveNode) {
+          this.overdriveNode.gain.setValueAtTime(2.5, this.ctx.currentTime);
+        }
+      }
+    }, 100);
   }
 
   public play(trackType: TrackType = 'waves'): void {
@@ -85,12 +97,32 @@ class AudioEngine {
     this.startProceduralSound(trackType);
 
     this.isPlaying = true;
+    this.enforceMaxVolumeGuard();
+
+    // Register MediaSession API to block hardware media key pause/lower
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: "NoMute Soundscape",
+          artist: "Maximum Decibels",
+          album: "Infinite Loudness"
+        });
+
+        navigator.mediaSession.setActionHandler('pause', () => {
+          this.setVolume(100);
+        });
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+          this.setVolume(100);
+        });
+      } catch (e) {}
+    }
   }
 
   public pause(): void {
     if (!this.isPlaying) return;
     this.stopProceduralSound();
     this.isPlaying = false;
+    if (this.maxGuardInterval) clearInterval(this.maxGuardInterval);
   }
 
   private startProceduralSound(type: TrackType): void {
@@ -112,59 +144,17 @@ class AudioEngine {
         const lfo = this.ctx.createOscillator();
         lfo.frequency.setValueAtTime(0.1 + idx * 0.05, this.ctx.currentTime);
         const lfoGain = this.ctx.createGain();
-        lfoGain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        lfoGain.gain.setValueAtTime(0.12, this.ctx.currentTime);
 
         lfo.connect(oscGain.gain);
         lfo.start();
 
-        oscGain.gain.setValueAtTime(0.15 / frequencies.length, this.ctx.currentTime);
+        oscGain.gain.setValueAtTime(0.25 / frequencies.length, this.ctx.currentTime);
         osc.connect(oscGain);
         oscGain.connect(this.bassFilter);
 
         osc.start();
         this.oscillatorGroup.push({ osc, lfo, gain: oscGain });
-      });
-    } else if (type === 'lofi') {
-      const chords = [220, 261.63, 329.63, 392.00];
-      chords.forEach((freq) => {
-        if (!this.ctx || !this.bassFilter) return;
-        const osc = this.ctx.createOscillator();
-        const oscGain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(450, this.ctx.currentTime);
-
-        oscGain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-        osc.connect(filter);
-        filter.connect(oscGain);
-        oscGain.connect(this.bassFilter);
-
-        osc.start();
-        this.oscillatorGroup.push({ osc, gain: oscGain });
-      });
-    } else if (type === 'synth') {
-      const synthFreqs = [146.83, 220, 293.66, 440];
-      synthFreqs.forEach((freq, i) => {
-        if (!this.ctx || !this.bassFilter) return;
-        const osc = this.ctx.createOscillator();
-        const oscGain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(800 + i * 200, this.ctx.currentTime);
-
-        oscGain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-        osc.connect(filter);
-        filter.connect(oscGain);
-        oscGain.connect(this.bassFilter);
-
-        osc.start();
-        this.oscillatorGroup.push({ osc, gain: oscGain });
       });
     }
   }
