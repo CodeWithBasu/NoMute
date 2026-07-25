@@ -1,8 +1,23 @@
 "use client";
 
+import React from "react";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat } from "lucide-react";
 import AudioVisualizer from "./AudioVisualizer";
 import VolumePanel from "./VolumePanel";
+import { Track } from "./TrackList";
+
+export interface PlayerCardProps {
+  track: Track;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+  onPrevTrack: () => void;
+  onNextTrack: () => void;
+  onShuffleTrack: () => void;
+  onRepeatTrack: () => void;
+  onTriggerToast: (message: string) => void;
+  progressSeconds: number;
+  durationSeconds: number;
+}
 
 export default function PlayerCard({
   track,
@@ -15,11 +30,11 @@ export default function PlayerCard({
   onTriggerToast,
   progressSeconds,
   durationSeconds
-}) {
+}: PlayerCardProps) {
   const Icon = track.icon;
   const progressPct = durationSeconds > 0 ? (progressSeconds / durationSeconds) * 100 : 0;
 
-  const formatTime = (secs) => {
+  const formatTime = (secs: number): string => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
     return `${m}:${s < 10 ? "0" : ""}${s}`;
