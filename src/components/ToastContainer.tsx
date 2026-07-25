@@ -1,8 +1,18 @@
 "use client";
 
+import React from "react";
 import { Volume2 } from "lucide-react";
 
-export default function ToastContainer({ toasts }) {
+export interface ToastItem {
+  id: number;
+  message: string;
+}
+
+export interface ToastContainerProps {
+  toasts: ToastItem[];
+}
+
+export default function ToastContainer({ toasts }: ToastContainerProps) {
   return (
     <div className="fixed top-6 right-6 flex flex-col gap-3 z-50 pointer-events-none">
       {toasts.map((toast) => (
