@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Disc, Waves, Sparkles, Heart, Radio } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
-import TrackList from "@/components/TrackList";
-import ToastContainer from "@/components/ToastContainer";
+import TrackList, { Track } from "@/components/TrackList";
+import ToastContainer, { ToastItem } from "@/components/ToastContainer";
 import { audioEngine } from "@/lib/audio-engine";
 
-const PLAYLIST = [
+const PLAYLIST: Track[] = [
   {
     title: "Calm Ocean Waves",
     artist: "Deep Meditation • Relaxing Ambience",
@@ -43,16 +43,16 @@ const PLAYLIST = [
 ];
 
 export default function Home() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [isBassBoost, setIsBassBoost] = useState(true);
-  const [progressSeconds, setProgressSeconds] = useState(0);
-  const [toasts, setToasts] = useState([]);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
+  const [isBassBoost, setIsBassBoost] = useState<boolean>(true);
+  const [progressSeconds, setProgressSeconds] = useState<number>(0);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const currentTrack = PLAYLIST[currentTrackIndex];
 
   useEffect(() => {
-    let interval = null;
+    let interval: NodeJS.Timeout | null = null;
     if (isPlaying) {
       interval = setInterval(() => {
         setProgressSeconds((prev) => {
@@ -60,13 +60,13 @@ export default function Home() {
           return prev + 1;
         });
       }, 1000);
-    } else {
-      clearInterval(interval);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isPlaying, currentTrack]);
 
-  const triggerToast = (message) => {
+  const triggerToast = (message: string) => {
     const id = Date.now() + Math.random();
     setToasts((prev) => [...prev, { id, message }]);
 
@@ -86,7 +86,7 @@ export default function Home() {
     }
   };
 
-  const handleSelectTrack = (index) => {
+  const handleSelectTrack = (index: number) => {
     setCurrentTrackIndex(index);
     setProgressSeconds(0);
     if (isPlaying) {
@@ -138,7 +138,7 @@ export default function Home() {
               <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" /> LIVE AUDIO
             </span>
             <span className="px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3" /> NEXT.JS EDITION
+              <Sparkles className="w-3 h-3" /> NEXT.JS + TYPESCRIPT
             </span>
           </div>
         </header>
@@ -171,7 +171,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="text-center text-xs text-gray-500 py-2">
           <p className="flex items-center justify-center gap-1">
-            Built with Next.js, React, Tailwind CSS & <Heart className="w-3.5 h-3.5 text-pink-500 fill-pink-500" /> |{" "}
+            Built with Next.js, React, TypeScript, Tailwind CSS & <Heart className="w-3.5 h-3.5 text-pink-500 fill-pink-500" /> |{" "}
             <a
               href="https://github.com/CodeWithBasu/NoMute"
               target="_blank"
