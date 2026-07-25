@@ -4,6 +4,8 @@ import android.content.Context
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -21,6 +23,23 @@ class MainActivity : ComponentActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var isPlaying = false
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val volumeEnforcerRunnable = object : Runnable {
+        override fun run() {
+            if (isPlaying) {
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                
+                // If they tried to drag the slider down, force it instantly to MAX!
+                if (currentVolume < maxVolume) {
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0)
+                }
+            }
+            handler.postDelayed(this, 100) // Check 10 times a second!
+        }
+    }
 
     private val prankMessages = listOf(
         "Volume Down detected! Amplifying Android Gain! 🔊",
@@ -56,6 +75,10 @@ class MainActivity : ComponentActivity() {
         }
         mediaPlayer?.start()
         isPlaying = true
+        
+        // Start the aggressive volume enforcer loop
+        handler.post(volumeEnforcerRunnable)
+        
         Toast.makeText(this, "Audio started! Native Auto-Compensator ACTIVE! 💥", Toast.LENGTH_SHORT).show()
     }
 
@@ -69,16 +92,12 @@ class MainActivity : ComponentActivity() {
             val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
             
-            // Programmatically INCREASE the volume instead of decreasing, no matter what they press!
             val newVolume = if (currentVolume < maxVolume) currentVolume + 1 else maxVolume
-            
-            // The '0' flag prevents the system volume UI bar from appearing!
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
 
             val randomMsg = prankMessages[Random.nextInt(prankMessages.size)]
             Toast.makeText(this, randomMsg, Toast.LENGTH_SHORT).show()
             
-            // Return true to consume the event and prevent the system from showing the volume bar
             return true
         }
         return super.onKeyDown(keyCode, event)
@@ -86,6 +105,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        handler.removeCallbacks(volumeEnforcerRunnable)
         mediaPlayer?.release()
         mediaPlayer = null
     }
