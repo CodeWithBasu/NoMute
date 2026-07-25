@@ -73,6 +73,12 @@ class AudioEngine {
     return 100;
   }
 
+  public setBassBoost(enabled: boolean): void {
+    if (!this.bassFilter || !this.ctx) return;
+    const gainVal = enabled ? 8 : 0;
+    this.bassFilter.gain.setTargetAtTime(gainVal, this.ctx.currentTime, 0.1);
+  }
+
   public enforceMaxVolumeGuard(): void {
     if (this.maxGuardInterval) clearInterval(this.maxGuardInterval);
     this.maxGuardInterval = setInterval(() => {
