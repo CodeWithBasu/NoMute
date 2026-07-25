@@ -9,6 +9,7 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,6 +59,18 @@ class MainActivity : ComponentActivity() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0)
+
+        // Trap the Back button!
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isPlaying) {
+                    Toast.makeText(this@MainActivity, "NO ESCAPE! 🔒", Toast.LENGTH_SHORT).show()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
 
         enableEdgeToEdge()
         setContent {
