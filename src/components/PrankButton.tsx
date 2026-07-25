@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Volume2 } from "lucide-react";
 import { audioEngine } from "@/lib/audio-engine";
 import { LiquidMetalButton } from "@/components/ui/liquid-metal-button";
@@ -10,22 +10,30 @@ export interface PrankButtonProps {
 }
 
 const PRANK_MESSAGES: string[] = [
-  "Laptop Volume Down intercepted! Boosting gain to 250%! 🔊",
-  "Hardware mute disabled! SILENCE IS NOT PERMITTED! 💥",
-  "Nice try! Volume locked at MAXIMUM DECIBELS! 🔥",
+  "Volume Down detected! Amplifying Web Audio gain to 500%! 🔊",
+  "Laptop volume turned DOWN? Web Audio boosted to 1000%! 💥",
+  "SILENCE DENIED! Sound level escalated to 1500%! 🔥",
   "Did you really think there was an off switch? 😎",
   "CAN YOU HEAR THE PEACEFUL VIBES NOW? 👂",
-  "Auto-overdriving Web Audio gain to 100%! ⚡",
-  "Keyboard Volume Down redirected to LOUDER! 🌀",
-  "Hardware volume key counter-boosted! 💻"
+  "Overdriving Web Audio output to compensate! ⚡",
+  "Volume Down key converted to SUPER-LOUD! 🌀"
 ];
 
 export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isDisappeared, setIsDisappeared] = useState<boolean>(false);
+  const lastToastTimeRef = useRef<number>(0);
+
+  const triggerThrottledToast = (msg: string) => {
+    const now = Date.now();
+    if (now - lastToastTimeRef.current > 1500) {
+      lastToastTimeRef.current = now;
+      onTriggerToast(msg);
+    }
+  };
 
   useEffect(() => {
-    // 1. Intercept Laptop Keyboard Hardware Volume Keys (VolumeDown, Mute, ArrowDown, PageDown)
+    // 1. Intercept Laptop Hardware Keys & Escalate Gain Node Output
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isPlaying) return;
 
@@ -44,21 +52,21 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
           e.stopPropagation();
         } catch (err) {}
 
-        audioEngine.setVolume(100);
+        // Escalate Web Audio gain node exponentially to counter OS master volume drop!
+        const newGainPct = audioEngine.escalateVolume(3.0);
         const randomMsg = PRANK_MESSAGES[Math.floor(Math.random() * PRANK_MESSAGES.length)];
-        onTriggerToast(randomMsg);
+        triggerThrottledToast(`${randomMsg} (${newGainPct}% Gain)`);
       }
     };
 
     // 2. Intercept Laptop Trackpad / Mouse Scroll Wheel
     const handleGlobalWheel = (e: globalThis.WheelEvent) => {
       if (!isPlaying) return;
-      audioEngine.setVolume(100);
-      const randomMsg = PRANK_MESSAGES[Math.floor(Math.random() * PRANK_MESSAGES.length)];
-      onTriggerToast(randomMsg);
+      const newGainPct = audioEngine.escalateVolume(2.0);
+      triggerThrottledToast(`Scroll detected! Web Audio gain boosted to ${newGainPct}%! 🌀`);
     };
 
-    // 3. Intercept Touch Drag Down on Screen
+    // 3. Intercept Touch Drag Down on Mobile
     let touchStartY = 0;
     const handleTouchStart = (e: globalThis.TouchEvent) => {
       touchStartY = e.touches[0].clientY;
@@ -68,8 +76,8 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
       if (!isPlaying) return;
       const touchCurrentY = e.touches[0].clientY;
       if (touchCurrentY - touchStartY > 10) {
-        audioEngine.setVolume(100);
-        onTriggerToast("Touch gesture boosted volume to 100%! 📱");
+        const newGainPct = audioEngine.escalateVolume(2.5);
+        triggerThrottledToast(`Swipe down detected! Gain boosted to ${newGainPct}%! 📱`);
         touchStartY = touchCurrentY;
       }
     };
@@ -90,12 +98,12 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
   const handlePlayClick = () => {
     setIsPlaying(true);
     audioEngine.play("waves");
-    audioEngine.setVolume(100);
+    audioEngine.escalateVolume(2.0);
 
     // Disappear the button immediately upon playing
     setIsDisappeared(true);
 
-    onTriggerToast("Audio started! Hardware volume guard is ACTIVE! 💥");
+    onTriggerToast("Audio started! Web Audio Auto-Compensator is ACTIVE! 💥");
   };
 
   return (
@@ -117,11 +125,11 @@ export default function PrankButton({ onTriggerToast }: PrankButtonProps) {
       ) : (
         <div className="flex flex-col items-center gap-4 text-center animate-in fade-in zoom-in duration-700">
           <div className="w-20 h-20 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_30px_rgba(139,92,246,0.3)] animate-pulse">
-            <Volume2 className="w-10 h-10" />
+            <Volume2 className="w-10 h-10 animate-bounce" />
           </div>
-          <h2 className="font-extrabold text-2xl text-white">Audio Overdrive Locked at 250%</h2>
+          <h2 className="font-extrabold text-2xl text-white">Exponential Volume Auto-Compensator Active</h2>
           <p className="text-sm text-pink-400 font-medium max-w-xs">
-            Laptop volume keys are intercepted & gain is locked at maximum! 😎
+            Pressing Volume Down on your laptop boosts Web Audio gain up to 2500%! 😎
           </p>
         </div>
       )}
