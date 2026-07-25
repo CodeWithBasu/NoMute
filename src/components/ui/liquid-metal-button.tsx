@@ -1,6 +1,5 @@
 "use client";
 
-import { liquidMetalFragmentShader, ShaderMount } from "@paper-design/shaders";
 import { Sparkles } from "lucide-react";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -78,9 +77,15 @@ export function LiquidMetalButton({
       document.head.appendChild(style);
     }
 
+    let isSubscribed = true;
+
     const loadShader = async () => {
       try {
-        if (shaderRef.current) {
+        const { liquidMetalFragmentShader, ShaderMount } = await import(
+          "@paper-design/shaders"
+        );
+
+        if (shaderRef.current && isSubscribed) {
           if (shaderMount.current?.destroy) {
             shaderMount.current.destroy();
           }
@@ -113,6 +118,7 @@ export function LiquidMetalButton({
     loadShader();
 
     return () => {
+      isSubscribed = false;
       if (shaderMount.current?.destroy) {
         shaderMount.current.destroy();
         shaderMount.current = null;
