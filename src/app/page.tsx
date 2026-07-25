@@ -1,32 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Disc, Heart } from "lucide-react";
-import PlayerCard from "@/components/PlayerCard";
+import PrankButton from "@/components/PrankButton";
 import ToastContainer, { ToastItem } from "@/components/ToastContainer";
-import { audioEngine } from "@/lib/audio-engine";
 
 export default function Home() {
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [progressSeconds, setProgressSeconds] = useState<number>(0);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-
-  const durationSec = 225; // 3:45
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setProgressSeconds((prev) => {
-          if (prev >= durationSec) return 0;
-          return prev + 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isPlaying]);
 
   const triggerToast = (message: string) => {
     const id = Date.now() + Math.random();
@@ -37,17 +17,6 @@ export default function Home() {
     }, 3000);
   };
 
-  const handleTogglePlay = () => {
-    if (!isPlaying) {
-      setIsPlaying(true);
-      audioEngine.play("waves");
-      triggerToast("Audio playback started! Try lowering the volume... 😉");
-    } else {
-      setIsPlaying(false);
-      audioEngine.pause();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#080b11] text-gray-100 flex flex-col items-center justify-between p-6 relative overflow-hidden font-sans">
       {/* Background Glowing Ambient Orbs */}
@@ -55,10 +24,10 @@ export default function Home() {
       <div className="fixed -bottom-28 -right-28 w-[500px] h-[500px] bg-cyan-500/15 rounded-full blur-[140px] pointer-events-none animate-float-orb delay-1000" />
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-pink-500/15 rounded-full blur-[140px] pointer-events-none animate-float-orb delay-500" />
 
-      {/* Dynamic Toast Notifications */}
+      {/* Prank Toast Notifications */}
       <ToastContainer toasts={toasts} />
 
-      {/* Header Logo Only (No Badges) */}
+      {/* Header Logo Only */}
       <header className="w-full max-w-md flex justify-center items-center py-4 z-10">
         <div className="flex items-center gap-3">
           <Disc className="w-7 h-7 text-purple-400 animate-spin" />
@@ -68,15 +37,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Single Centered Premium Player */}
-      <main className="w-full max-w-md my-auto z-10">
-        <PlayerCard
-          isPlaying={isPlaying}
-          onTogglePlay={handleTogglePlay}
-          onTriggerToast={triggerToast}
-          progressSeconds={progressSeconds}
-          durationSeconds={durationSec}
-        />
+      {/* Main Single Centered Premium Disappearing Play Button */}
+      <main className="w-full max-w-md my-auto flex justify-center items-center z-10">
+        <PrankButton onTriggerToast={triggerToast} />
       </main>
 
       {/* Minimal Footer */}
