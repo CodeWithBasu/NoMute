@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useRef, ChangeEvent, WheelEvent, TouchEvent } from "react";
 import { Volume2, VolumeX, Zap, ShieldCheck } from "lucide-react";
 import { audioEngine } from "@/lib/audio-engine";
 
-const PRANK_MESSAGES = [
+const PRANK_MESSAGES: string[] = [
   "Did you mean 100% Volume? We got you! 🔊",
   "LOUDER IS BETTER! 🚀",
   "Volume set to MAXIMUM DECIBELS! 💥",
@@ -15,13 +15,17 @@ const PRANK_MESSAGES = [
   "Auto-amplifying sound for maximum clarity! ⚡"
 ];
 
-export default function VolumePanel({ onTriggerToast }) {
-  const [volume, setVolume] = useState(35);
-  const [isTrapped, setIsTrapped] = useState(false);
-  const prevValRef = useRef(35);
-  const touchStartYRef = useRef(0);
+export interface VolumePanelProps {
+  onTriggerToast: (message: string) => void;
+}
 
-  const updateVolume = (val, message = null) => {
+export default function VolumePanel({ onTriggerToast }: VolumePanelProps) {
+  const [volume, setVolume] = useState<number>(35);
+  const [isTrapped, setIsTrapped] = useState<boolean>(false);
+  const prevValRef = useRef<number>(35);
+  const touchStartYRef = useRef<number>(0);
+
+  const updateVolume = (val: number, message: string | null = null) => {
     const clamped = Math.max(0, Math.min(100, val));
     setVolume(clamped);
     prevValRef.current = clamped;
@@ -35,18 +39,16 @@ export default function VolumePanel({ onTriggerToast }) {
     }
   };
 
-  const handleSliderChange = (e) => {
+  const handleSliderChange = (e: ChangeEvent<HTMLInputElement>) => {
     const currentVal = parseInt(e.target.value, 10);
     const prevVal = prevValRef.current;
 
     if (currentVal < prevVal) {
-      // Trying to decrease volume -> TURN UP!
       const attemptedDecrease = prevVal - currentVal;
       const targetVal = Math.min(100, prevVal + attemptedDecrease * 2 + 15);
       const randomMsg = PRANK_MESSAGES[Math.floor(Math.random() * PRANK_MESSAGES.length)];
       updateVolume(targetVal, randomMsg);
     } else {
-      // Trying to increase volume -> BOOST TO MAX!
       const targetVal = Math.min(100, currentVal + 25);
       updateVolume(targetVal, "Accelerating to MAX VOLUME! ⚡");
     }
@@ -60,18 +62,18 @@ export default function VolumePanel({ onTriggerToast }) {
     updateVolume(100, "FULL POWER ENGAGED! ⚡");
   };
 
-  const handleWheel = (e) => {
+  const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     const nextVal = Math.min(100, volume + 15);
     const randomMsg = PRANK_MESSAGES[Math.floor(Math.random() * PRANK_MESSAGES.length)];
     updateVolume(nextVal, "Scroll action redirected to LOUDER! 🌀");
   };
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: TouchEvent<HTMLInputElement>) => {
     touchStartYRef.current = e.touches[0].clientY;
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: TouchEvent<HTMLInputElement>) => {
     const touchCurrentY = e.touches[0].clientY;
     const deltaY = touchCurrentY - touchStartYRef.current;
     if (deltaY > 5) {
