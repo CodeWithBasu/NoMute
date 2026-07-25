@@ -1,51 +1,54 @@
-# 🔊 NoMute - The Inverted Volume Ambient Sound Experience
+# 🔊 NoMute - Inverted Volume Ambient Sound Web App (Next.js Edition)
 
+[![Next.js](https://img.shields.io/badge/Framework-Next.js%2015-black.svg?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/Library-React%2019-61DAFB.svg?logo=react)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20CSS-38BDF8.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status: Active](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
-[![Aesthetic: Glassmorphism](https://img.shields.io/badge/Design-Glassmorphism-purple.svg)]()
 
-**NoMute** is a deceptively sleek, high-end ambient sound web application with an interactive UX twist: **the volume control only knows one direction — UP!**
+**NoMute** is a modern, high-end ambient sound web application built with **Next.js**, **React**, **Tailwind CSS**, and the **Web Audio API**. It comes with an interactive UX twist: **the volume control only knows one direction — UP!**
 
-Disguised behind a ultra-modern dark mode glassmorphic UI, visitors are invited to listen to relaxing soundscapes. When they try to lower the volume or mute the track, custom physics-driven slider mechanics and Web Audio API gain nodes invert their input, boosting the sound level to maximum decibels!
+Disguised behind a sleek dark-mode glassmorphism interface, visitors are invited to listen to relaxing soundscapes. When they try to lower the volume or click mute, custom physics-driven slider hooks and Web Audio API gain nodes invert their input, boosting the sound level to 100%!
 
 ---
 
 ## ✨ Features
 
-- ** Sleek Glassmorphism Interface**: Dark theme with ambient neon glows, floating blurred panels, and smooth micro-interactions.
+- ** Next.js & React Architecture**: Built with App Router, Client Components, and hooks for seamless state management.
+- ** Tailwind CSS & Glassmorphism Design System**: Modern dark theme with glowing neon gradients, blurred panels, and micro-interactions.
 - ** Inverted Volume Trap**:
   - Dragging volume down $\rightarrow$ turns volume **UP**.
-  - Clicking Mute $\rightarrow$ Unmutes & sets volume to **MAX**.
-  - Mouse wheel scrolling $\rightarrow$ Boosts sound level.
-  - Physical slider spring physics snapping back to 100%.
-- ** Audio Visualizer**: Real-time canvas spectrum visualizer powered by Web Audio API `AnalyserNode`.
-- ** Sound Library**: Built-in royalty-free soundscapes + procedural Web Audio synth fallback generator so it plays sound seamlessly anywhere without external asset dependencies.
-- ** Responsive & Mobile Ready**: Full touch gesture support for mobile devices.
+  - Clicking Mute $\rightarrow$ Unmutes & sets volume to **MAX (100%)**.
+  - Mouse wheel scrolling $\rightarrow$ Redirected to sound level boost.
+  - Touch swipe gestures supported on mobile.
+- ** Web Audio Spectrum Visualizer**: Real-time canvas spectrum visualizer powered by Web Audio API `AnalyserNode`.
+- ** Procedural Audio Synthesizer**: Zero external asset dependencies — generates high quality ambient rain, meditation pads, lofi chords, and synthwave beats directly in the browser!
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Getting Started
 
-Simply open `index.html` in any modern web browser or host it via GitHub Pages!
+First, run the development server:
 
 ```bash
-# Clone the repository
-git clone https://github.com/CodeWithBasu/NoMute.git
-
-# Navigate into the project
-cd NoMute
-
-# Open index.html in browser
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ---
 
-## 🛠️ Built With
+## 🛠️ Tech Stack
 
-- **HTML5 & CSS3** (Custom design system, CSS grid, variables, keyframes)
-- **Vanilla JavaScript ES6+**
-- **Web Audio API** (`AudioContext`, `GainNode`, `AnalyserNode`)
-- **Canvas API** for dynamic visualizer graphics
+- **Framework**: Next.js (App Router)
+- **Library**: React
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Audio Engine**: Web Audio API (`AudioContext`, `GainNode`, `AnalyserNode`)
+- **Canvas API**: Real-time canvas spectrum visualization
 
 ---
 
