@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
 
     private fun startAudio() {
         if (mediaPlayer == null) {
-            mediaPlayer = MediaPlayer.create(this, R.raw.waves)
+            mediaPlayer = MediaPlayer.create(this, R.raw.prank_audio)
             mediaPlayer?.isLooping = true
         }
         mediaPlayer?.start()
