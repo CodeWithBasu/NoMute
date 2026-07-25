@@ -10,6 +10,42 @@ interface LiquidMetalButtonProps {
   viewMode?: "text" | "icon";
 }
 
+const VERTEX_SHADER_SOURCE = `
+  attribute vec2 a_position;
+  void main() {
+    gl_Position = vec4(a_position, 0.0, 1.0);
+  }
+`;
+
+const FRAGMENT_SHADER_SOURCE = `
+  precision mediump float;
+  uniform vec2 u_resolution;
+  uniform float u_time;
+  uniform float u_speed;
+
+  void main() {
+    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+    vec2 p = st * 3.0 - vec2(1.5);
+    p.x *= u_resolution.x / u_resolution.y;
+
+    float t = u_time * u_speed;
+
+    for (int n = 1; n < 5; n++) {
+      float i = float(n);
+      p += vec2(
+        0.6 / i * sin(i * p.y + t + 0.3 * i) + 0.5,
+        0.6 / i * sin(i * p.x + t + 0.3 * i) + 0.5
+      );
+    }
+
+    float metal = 0.5 + 0.5 * sin(p.x * 3.0 + p.y * 3.0);
+    vec3 col = mix(vec3(0.08, 0.08, 0.12), vec3(0.85, 0.9, 1.0), metal);
+    col += vec3(0.15 * sin(p.x * 5.0 + t), 0.1 * cos(p.y * 5.0 + t), 0.25);
+
+    gl_FragColor = vec4(col, 1.0);
+  }
+`;
+
 export function LiquidMetalButton({
   label = "Click Me",
   onClick,
@@ -21,10 +57,9 @@ export function LiquidMetalButton({
     Array<{ x: number; y: number; id: number }>
   >([]);
   const shaderRef = useRef<HTMLDivElement>(null);
-  // biome-ignore lint/suspicious/noExplicitAny: External library without types
-  const shaderMount = useRef<any>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const rippleId = useRef(0);
+  const speedRef = useRef(0.6);
 
   const dimensions = useMemo(() => {
     if (viewMode === "icon") {
@@ -49,105 +84,102 @@ export function LiquidMetalButton({
   }, [viewMode]);
 
   useEffect(() => {
-    const styleId = "shader-canvas-style-exploded";
-    if (!document.getElementById(styleId)) {
-      const style = document.createElement("style");
-      style.id = styleId;
-      style.textContent = `
-        .shader-container-exploded canvas {
-          width: 100% !important;
-          height: 100% !important;
-          display: block !important;
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-          border-radius: 100px !important;
-        }
-        @keyframes ripple-animation {
-          0% {
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 0.6;
-          }
-          100% {
-            transform: translate(-50%, -50%) scale(4);
-            opacity: 0;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    }
+    const container = shaderRef.current;
+    if (!container) return;
 
-    let isSubscribed = true;
+    // Create Canvas
+    const canvas = document.createElement("canvas");
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.display = "block";
+    canvas.style.borderRadius = "100px";
+    container.appendChild(canvas);
 
-    const loadShader = async () => {
-      try {
-        const { liquidMetalFragmentShader, ShaderMount } = await import(
-          "@paper-design/shaders"
-        );
+    const gl = canvas.getContext("webgl");
+    if (!gl) return;
 
-        if (shaderRef.current && isSubscribed) {
-          if (shaderMount.current?.destroy) {
-            shaderMount.current.destroy();
-          }
+    // Create & Compile Vertex Shader
+    const vs = gl.createShader(gl.VERTEX_SHADER)!;
+    gl.shaderSource(vs, VERTEX_SHADER_SOURCE);
+    gl.compileShader(vs);
 
-          shaderMount.current = new ShaderMount(
-            shaderRef.current,
-            liquidMetalFragmentShader,
-            {
-              u_repetition: 4,
-              u_softness: 0.5,
-              u_shiftRed: 0.3,
-              u_shiftBlue: 0.3,
-              u_distortion: 0,
-              u_contour: 0,
-              u_angle: 45,
-              u_scale: 8,
-              u_shape: 1,
-              u_offsetX: 0.1,
-              u_offsetY: -0.1,
-            },
-            undefined,
-            0.6,
-          );
-        }
-      } catch (error) {
-        console.error("[v0] Failed to load shader:", error);
+    // Create & Compile Fragment Shader
+    const fs = gl.createShader(gl.FRAGMENT_SHADER)!;
+    gl.shaderSource(fs, FRAGMENT_SHADER_SOURCE);
+    gl.compileShader(fs);
+
+    // Create Program
+    const program = gl.createProgram()!;
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    // Quad geometry
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      gl.STATIC_DRAW
+    );
+
+    const positionLocation = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+    const timeLocation = gl.getUniformLocation(program, "u_time");
+    const speedLocation = gl.getUniformLocation(program, "u_speed");
+
+    let animId: number;
+    let startTime = performance.now();
+
+    const render = () => {
+      const displayWidth = container.clientWidth || dimensions.shaderWidth;
+      const displayHeight = container.clientHeight || dimensions.shaderHeight;
+
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, displayWidth, displayHeight);
       }
+
+      const currentTime = (performance.now() - startTime) / 1000;
+      gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+      gl.uniform1f(timeLocation, currentTime);
+      gl.uniform1f(speedLocation, speedRef.current);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      animId = requestAnimationFrame(render);
     };
 
-    loadShader();
+    render();
 
     return () => {
-      isSubscribed = false;
-      if (shaderMount.current?.destroy) {
-        shaderMount.current.destroy();
-        shaderMount.current = null;
+      cancelAnimationFrame(animId);
+      if (container.contains(canvas)) {
+        container.removeChild(canvas);
       }
     };
-  }, []);
+  }, [dimensions]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    shaderMount.current?.setSpeed?.(1);
+    speedRef.current = 1.2;
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
     setIsPressed(false);
-    shaderMount.current?.setSpeed?.(0.6);
+    speedRef.current = 0.6;
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (shaderMount.current?.setSpeed) {
-      shaderMount.current.setSpeed(2.4);
-      setTimeout(() => {
-        if (isHovered) {
-          shaderMount.current?.setSpeed?.(1);
-        } else {
-          shaderMount.current?.setSpeed?.(0.6);
-        }
-      }, 300);
-    }
+    speedRef.current = 2.4;
+    setTimeout(() => {
+      speedRef.current = isHovered ? 1.2 : 0.6;
+    }, 300);
 
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
