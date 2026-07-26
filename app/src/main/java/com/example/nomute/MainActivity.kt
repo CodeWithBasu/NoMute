@@ -55,6 +55,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Prevent the phone from sleeping, show the app OVER the lock screen, and force max brightness!
+        window.addFlags(
+            android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+            android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+            android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+        )
+        
+        // Force the screen to Maximum Brightness!
+        val layoutParams = window.attributes
+        layoutParams.screenBrightness = 1.0f
+        window.attributes = layoutParams
+
         // Instantly force max volume the exact second the app is opened!
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
