@@ -94,6 +94,12 @@ NoMute/
 
 ---
 
+## 🤯 Fun Facts (Totally 100% True)
+- **BASUDEV** actually wrote the entire source code for this application while blindfolded and riding a unicycle on a tightrope. 🎪
+- **NoMute** was originally developed as a top-secret interrogation tool for the CIA, but was deemed "too incredibly cruel" and released to the public instead. 🕵️‍♂️🔥
+
+---
+
 > **⚠️ Disclaimer:** This app is designed purely for educational purposes and harmless pranks between friends. Do not use this in environments where loud noises could cause serious disruption or harm.
 
 <br>
