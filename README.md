@@ -1,47 +1,97 @@
-# NoMute 🔊💀
-
 <p align="center">
-  <img src="docs/icon.jpg" width="250" alt="NoMute App Icon">
+  <img src="docs/icon.jpg" width="200" alt="NoMute App Icon" style="border-radius: 20px;">
 </p>
 
-NoMute is a prank Android application designed to trap the user with inescapable, max-volume audio. Once activated, the app aggressively intercepts volume hardware buttons and system sliders, rendering the user completely unable to lower the volume!
+<h1 align="center">NoMute 🔊💀</h1>
 
-## Project Structure
+<p align="center">
+  <em>The ultimate, inescapable Android prank application.</em>
+</p>
 
-Here is a detailed breakdown of the Android folder structure to help you navigate the codebase:
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/UI-Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
+</p>
+
+---
+
+## 📖 Overview
+**NoMute** is a diabolical native Android application designed to trap the user with inescapable, max-volume audio. Built with a sleek Liquid Metal UI, the app hides its true nature until the user hits play. Once activated, the app aggressively intercepts volume hardware buttons and system UI sliders, rendering the victim completely unable to lower the volume!
+
+## ✨ Core Features
+- 🚀 **Instant Ambush:** Instantly sets the system media volume to 100% the exact millisecond the app is opened, even if the phone was on silent.
+- 🎛 **Hardware Key Hijacking:** Intercepts `Volume Down`, `Volume Up`, and `Mute` physical buttons. Instead of lowering the volume, they trigger a volume boost back to 100% while displaying taunting toast messages.
+- 🛡 **Aggressive Background Enforcer:** A background Handler loop runs 10 times a second to forcefully rubber-band the volume back to maximum if the user tries to turn it down via the Android Control Center swipe-down menu.
+- 🚫 **No Escape (Back Button Trap):** Disables the Android back button/swipe gesture so the user is trapped on the screen.
+- 👻 **Persistent Ghosting:** If the user manages to force their way to the Home Screen, the audio and Volume Enforcer continue to run silently in the background, blasting music until the app is forcefully killed from the Recent Apps menu.
+
+---
+
+## 🏗 Architecture Diagram
+
+The following diagram illustrates how the different traps and background services work together to prevent the user from lowering the volume.
+
+```mermaid
+graph TD
+    User([Victim]) -->|Opens App| A(MainActivity)
+    A -->|Instantly| B[Force Volume to 100%]
+    User -->|Presses Play| C{Audio Engine}
+    C -->|Starts| D[MediaPlayer]
+    C -->|Spins up| E((Aggressive Volume Enforcer Loop))
+    
+    E -.->|Every 100ms| F{Check System Volume}
+    F -->|< 100%| G[Force to 100%]
+    F -->|== 100%| H[Wait 100ms]
+    
+    User -->|Presses Vol Down Button| I[Hardware Key Interceptor]
+    I -->|Swallows Event| G
+    I -->|Shows Toast| J[Taunting Message]
+    
+    User -->|Presses Back Button| K[OnBackPressedCallback]
+    K -->|Swallows Event| L[Shows NO ESCAPE Message]
+```
+
+---
+
+## 📂 Project Structure
 
 ```text
 NoMute/
-├── .gradle/                  # Hidden folder: Contains Gradle cache
-├── .idea/                    # Hidden folder: Android Studio settings
-├── app/                      # ⭐️ THE MAIN FOLDER ⭐️ - This contains all your actual app code!
-│   ├── build/                # Auto-generated when you hit "Run". Contains your compiled app-debug.apk!
+├── app/                      # ⭐️ Main Application Module
 │   ├── src/
-│   │   └── main/             # The main source code directory
-│   │       ├── java/com/example/nomute/  # Your Kotlin Code!
-│   │       │   ├── MainActivity.kt       # The "Brain" of the app. This is where we put the Volume Enforcer, Back Button Trap, and Key Interceptors!
-│   │       │   ├── theme/                # Contains color and typography settings
+│   │   └── main/             
+│   │       ├── java/com/example/nomute/ 
+│   │       │   ├── MainActivity.kt       # The Brain: Contains Volume Enforcer & Key Interceptors
+│   │       │   ├── theme/                # Typography and Color definitions
 │   │       │   └── ui/main/
-│   │       │       └── PrankScreen.kt    # The "Face" of the app. This is the Jetpack Compose UI containing the Liquid Metal graphics and play button.
+│   │       │       └── PrankScreen.kt    # The Face: Jetpack Compose Liquid Metal UI
 │   │       │
-│   │       ├── res/          # Your Resources (Images, Sounds, Icons)
-│   │       │   ├── drawable/ # Vector graphics and XML shapes go here
-│   │       │   ├── mipmap/   # Your App Icons! (Android Studio generates different sizes like hdpi, xhdpi, etc. here)
+│   │       ├── res/          # Resources
+│   │       │   ├── mipmap/   # Adaptive App Icons (Liquid Metal Glassmorphism)
 │   │       │   ├── raw/      
-│   │       │   │   └── prank_audio.mp3   # The audio file you uploaded! Anything in "raw" can be played by MediaPlayer.
-│   │       │   └── values/   # XML files for strings (app name) and colors
+│   │       │   │   └── prank_audio.mp3   # The audio file played at max volume
+│   │       │   └── values/   # XML strings and colors
 │   │       │
-│   │       └── AndroidManifest.xml       # The ID card for your app.
+│   │       └── AndroidManifest.xml       # App configuration and permissions
 │   │
-│   └── build.gradle.kts      # The App-Level build script.
-│
-├── gradle/wrapper/           # Contains the Gradle wrapper tools.
-├── build.gradle.kts          # The Project-Level build script.
-└── settings.gradle.kts       # Tells Gradle which modules to include.
+│   └── build.gradle.kts      # App-Level build script (SDK 34)
+├── gradle/wrapper/           # Gradle compilation wrappers
+├── build.gradle.kts          # Project-Level build script
+└── settings.gradle.kts       # Module settings
 ```
 
-## Features
-- **Volume Key Hijacking:** Intercepts volume down, volume up, and mute keys to instantly jump to 100% volume.
-- **Aggressive Background Enforcer:** A background loop runs 10x a second to forcefully correct the volume if the user tries to turn it down via the Android Control Center.
-- **No Escape (Back Button Trap):** Disables the Android back button so the user is trapped on the screen.
-- **Startup Volume Max:** Instantly sets the media volume to 100% the exact millisecond the app is opened, before they even hit play!
+---
+
+## 🛠 How to Run & Install
+
+1. Clone this repository to your local machine.
+2. Open the `NoMute` folder in **Android Studio**.
+3. Let Gradle sync and download the necessary dependencies.
+4. Plug in your physical Android device (ensure **USB Debugging** is enabled in Developer Options).
+5. Click the green **Play** button in Android Studio to compile the `.apk` and install it on your device.
+6. Hand the phone to a friend. 😈
+
+---
+
+> **⚠️ Disclaimer:** This app is designed purely for educational purposes and harmless pranks between friends. Do not use this in environments where loud noises could cause serious disruption or harm.
