@@ -95,3 +95,17 @@ NoMute/
 ---
 
 > **⚠️ Disclaimer:** This app is designed purely for educational purposes and harmless pranks between friends. Do not use this in environments where loud noises could cause serious disruption or harm.
+
+<br>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.gif" width="100%" alt="Rainbow Line">
+</p>
+
+<p align="center">
+  <img src="https://media.giphy.com/media/qgQUggCGvnPfa/giphy.gif" width="120" alt="Hacker GIF"><br>
+  <b>Created with 💖 by BASUDEV</b> <br>
+  <i>"Code hard, prank harder."</i> 😈<br>
+  <br>
+  © 2026 BASUDEV. All rights reserved.
+</p>
