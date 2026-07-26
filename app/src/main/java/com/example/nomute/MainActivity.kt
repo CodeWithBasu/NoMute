@@ -37,6 +37,18 @@ class MainActivity : ComponentActivity() {
                 if (currentVolume < maxVolume) {
                     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVolume, 0)
                 }
+
+                // MAXIMUM VIBRATION OVERDRIVE 📳
+                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+                if (vibrator.hasVibrator()) {
+                    // Vibrate chaotically for a random duration between 50ms and 200ms
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        vibrator.vibrate(android.os.VibrationEffect.createOneShot(Random.nextLong(50, 200), android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(Random.nextLong(50, 200))
+                    }
+                }
             }
             handler.postDelayed(this, 100) // Check 10 times a second!
         }
