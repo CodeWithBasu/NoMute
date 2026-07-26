@@ -1,5 +1,9 @@
 # NoMute 🔊💀
 
+<p align="center">
+  <img src="docs/icon.jpg" width="250" alt="NoMute App Icon">
+</p>
+
 NoMute is a prank Android application designed to trap the user with inescapable, max-volume audio. Once activated, the app aggressively intercepts volume hardware buttons and system sliders, rendering the user completely unable to lower the volume!
 
 ## Project Structure
